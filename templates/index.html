@@ -3,107 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PC Builder AI Assistant</title>
+    <title>AI Game Advisor</title>
     <style>
+        :root {
+            --primary: #9d4edd;
+            --primary-hover: #7b2cbf;
+            --bg: #0f0c29;
+            --card-bg: #1b1b3a;
+            --text: #ffffff;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: var(--text);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
         }
+
         .container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
             text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        input[type="number"] {
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin: 15px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
+
+        h1 {
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
+
+        p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        input {
+            width: 80%;
+            padding: 12px;
+            border-radius: 25px;
+            border: none;
+            background: #2d2d5a;
+            color: white;
+            outline: none;
+            text-align: center;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            box-shadow: 0 0 10px var(--primary);
+        }
+
         button {
-            background-color: #007bff;
+            background-color: var(--primary);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-size: 16px;
+            padding: 12px 30px;
+            border-radius: 25px;
             cursor: pointer;
-            width: 100%;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: 0.3s;
+            text-transform: uppercase;
         }
+
         button:hover {
-            background-color: #0056b3;
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
         }
-        .chat-box {
-            margin-top: 20px;
+
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        #result {
+            margin-top: 2rem;
             padding: 15px;
-            background-color: #e9ecef;
-            border-radius: 5px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
             min-height: 50px;
-            text-align: left;
-            font-size: 15px;
+            display: none;
+            line-height: 1.5;
+            border-left: 4px solid var(--primary);
         }
-        .loading {
-            font-style: italic;
-            color: #666;
+
+        .loader {
+            display: none;
+            margin: 20px auto;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>PC Builder AI Assistant</h2>
-    <p>Zadej svůj budget v Kč a AI ti doporučí komponentu.</p>
-    
-    <input type="number" id="budgetInput" placeholder="Např. 15000" required>
-    <button onclick="askAI()">Poradit komponentu</button>
+    <h1>Game Advisor</h1>
+    <p>Zadej svůj oblíbený žánr (např. FPS, RPG, Závodní) a AI ti vybere hru na míru!</p>
 
-    <div class="chat-box" id="responseBox">
-        Zde se zobrazí odpověď...
+    <div class="input-group">
+        <input type="text" id="genreInput" placeholder="Napiš žánr..." onkeypress="handleKeyPress(event)">
     </div>
+
+    <button id="sendBtn" onclick="getRecommendation()">Doporuč mi hru</button>
+
+    <div class="loader" id="loader"></div>
+    <div id="result"></div>
 </div>
 
 <script>
-    async function askAI() {
-        const budget = document.getElementById("budgetInput").value;
-        const responseBox = document.getElementById("responseBox");
+    function handleKeyPress(event) {
+        if (event.key === "Enter") {
+            getRecommendation();
+        }
+    }
 
-        if (!budget) {
-            responseBox.innerHTML = "Prosím, zadej nějakou částku.";
+    async function getRecommendation() {
+        const input = document.getElementById('genreInput');
+        const resultDiv = document.getElementById('result');
+        const loader = document.getElementById('loader');
+        const btn = document.getElementById('sendBtn');
+        
+        const genre = input.value.trim();
+        
+        if (!genre) {
+            alert("Prosím, zadej nějaký žánr!");
             return;
         }
 
-        responseBox.innerHTML = '<span class="loading">AI přemýšlí (může to chvilku trvat)...</span>';
+        // UI stav - načítání
+        resultDiv.style.display = 'none';
+        loader.style.display = 'block';
+        btn.disabled = true;
 
         try {
-            const response = await fetch('/ai', {
+            const response = await fetch('/recommend', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ budget: budget })
+                body: JSON.stringify({ genre: genre })
             });
 
             const data = await response.json();
-            
+
+            loader.style.display = 'none';
+            resultDiv.style.display = 'block';
+            btn.disabled = false;
+
             if (data.recommendation) {
-                responseBox.innerHTML = "<strong>AI:</strong> " + data.recommendation;
+                resultDiv.innerHTML = `<strong>AI doporučuje:</strong><br>${data.recommendation}`;
+                resultDiv.style.borderLeftColor = "#9d4edd";
             } else {
-                responseBox.innerHTML = "<strong>Chyba:</strong> " + (data.error || "Něco se pokazilo.");
+                resultDiv.innerText = "Chyba: " + (data.error || "Nepodařilo se získat odpověď.");
+                resultDiv.style.borderLeftColor = "red";
             }
         } catch (error) {
-            responseBox.innerHTML = "<strong>Chyba sítě:</strong> Nepodařilo se spojit se serverem.";
+            loader.style.display = 'none';
+            resultDiv.style.display = 'block';
+            btn.disabled = false;
+            resultDiv.innerText = "Chyba při spojení se serverem.";
+            resultDiv.style.borderLeftColor = "red";
         }
     }
 </script>
