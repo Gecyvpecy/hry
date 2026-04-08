@@ -1,21 +1,22 @@
-# PC Builder AI Assistant
-Projekt pro školní síťovou službu v Dockeru.
+#  AI Game Advisor
 
-## Parametry sítě
-- [cite_start]**Doména:** jmenoprijmeni.skola.test [cite: 21]
-- [cite_start]**Port:** 8081 (TCP) [cite: 16]
-- [cite_start]**DHCP Scope:** 10.10.10.100-200/24 (příklad) [cite: 12]
+Jednoduchá webová aplikace postavená na frameworku **Flask**, která využívá umělou inteligenci k doporučování videoher na základě uživatelem zadaného žánru.
 
-## Endpointy
-- `GET /ping`: Vrátí "pong"
-- `GET /status`: Vrátí JSON se stavem aplikace
-- `POST /ai`: Přijme JSON `{"budget": "5000"}` a vrátí doporučení komponenty
+##  Funkce
+* **Doporučení na míru:** Uživatel zadá herní žánr (např. FPS, RPG, Roguelike) a AI vygeneruje konkrétní doporučení včetně stručného zdůvodnění.
+* **Moderní UI:** Temný gaming design s responzivním rozhraním.
+* **AI Integrace:** Komunikace s modelem `gemma3:27b` přes OpenAI kompatibilní API.
+* **Status Endpoint:** Možnost kontroly stavu aplikace a autora.
 
-## Spuštění
-1. [cite_start]Nainstaluj a spusť Ollama s modelem: `ollama run gemma2:27b` [cite: 28]
-2. Vlož soubory na GitHub.
-3. Spusť příkazem: `docker-compose up -d`
+##  Technologie
+* **Backend:** Python 3.x, Flask
+* **Frontend:** HTML5, CSS3 (Flexbox), JavaScript (Fetch API)
+* **AI Komunikace:** Requests (s ošetřením SSL certifikátů)
+* **Deployment:** Připraveno pro Docker a školní testovací prostředí
 
-## Testování (curl)
-```bash
-curl -X POST http://localhost:8081/ai -H "Content-Type: application/json" -d '{"budget": "8000"}'
+##  Instalace a spuštění
+
+1. **Klonování repozitáře:**
+   ```bash
+   git clone <url-tvého-repozitáře>
+   cd <slozka-projektu>
