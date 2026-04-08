@@ -9,7 +9,7 @@ Jednoduchá webová aplikace postavená na frameworku **Flask**, která využív
 * **Status Endpoint:** Možnost kontroly stavu aplikace a autora.
 
 ##  Technologie
-* **Backend:** Python 3.x, Flask
+* **Backend:** Python 3.12, Flask
 * **Frontend:** HTML5, CSS3 (Flexbox), JavaScript (Fetch API)
 * **AI Komunikace:** Requests (s ošetřením SSL certifikátů)
 * **Deployment:** Připraveno pro Docker a školní testovací prostředí
