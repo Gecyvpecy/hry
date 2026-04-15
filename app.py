@@ -1,18 +1,41 @@
 import os
+import sqlite3
 import requests
 import datetime
 import urllib3
 from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
 
-# ✅ Vypnutí varování o SSL certifikátech
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 load_dotenv()
 
 app = Flask(__name__)
 
-# Konfigurace prostředí
+# --- KONFIGURACE DATABÁZE (podle obrázku) ---
+DB_PATH = "/data/history.db"
+
+def get_db_connection():
+    # Vytvoří složku /data, pokud neexistuje (pro lokální testování)
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+# Inicializace tabulky pro historii
+def init_db():
+    conn = get_db_connection()
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS history 
+        (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+         genre TEXT, 
+         recommendation TEXT, 
+         timestamp TEXT)
+    ''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
 api_key = os.environ.get("OPENAI_API_KEY", "")
 base_url = os.environ.get("OPENAI_BASE_URL", "https://kurim.ithope.eu/v1")
 
@@ -20,22 +43,22 @@ base_url = os.environ.get("OPENAI_BASE_URL", "https://kurim.ithope.eu/v1")
 def home():
     return render_template('index.html')
 
-@app.route('/status', methods=['GET'])
-def status():
-    return jsonify({
-        "status": "running",
-        "timestamp": datetime.datetime.now().isoformat(),
-        "author": "Kamaradka",  # Sem si může doplnit jméno
-        "app": "AI Game Advisor"
-    })
+# Nový endpoint pro zobrazení historie
+@app.route('/history', methods=['GET'])
+def get_history():
+    conn = get_db_connection()
+    rows = conn.execute('SELECT * FROM history ORDER BY id DESC').fetchall()
+    conn.close()
+    
+    # Převedeme na seznam slovníků pro snadné zobrazení
+    history_list = [dict(row) for row in rows]
+    return jsonify(history_list)
 
 @app.route('/recommend', methods=['POST'])
 def game_advisor():
     data = request.json
-    # Očekáváme, že z frontendu přijde klíč "genre" (žánr)
     genre = data.get("genre", "akční")
     
-    # ✅ Upravený prompt pro doporučování her
     prompt = (
         f"Uživatel má rád herní žánr: {genre}. "
         "Doporuč mu jednu konkrétní aktuální hru, která do tohoto žánru patří. "
@@ -60,8 +83,6 @@ def game_advisor():
         clean_url = base_url.rstrip('/')
         target_url = f"{clean_url}/chat/completions"
         
-        print(f"DEBUG: Doporučuji hru pro žánr: {genre}")
-
         response = requests.post(
             target_url, 
             headers=headers, 
@@ -72,17 +93,24 @@ def game_advisor():
         
         if response.status_code == 200:
             ai_response = response.json()['choices'][0]['message']['content']
+            
+            # --- ULOŽENÍ DO DATABÁZE ---
+            conn = get_db_connection()
+            conn.execute(
+                'INSERT INTO history (genre, recommendation, timestamp) VALUES (?, ?, ?)',
+                (genre, ai_response, datetime.datetime.now().strftime("%d.%m. %H:%M"))
+            )
+            conn.commit()
+            conn.close()
+            # ---------------------------
+
             return jsonify({"recommendation": ai_response})
         else:
-            return jsonify({
-                "error": f"Server vrátil {response.status_code}.",
-                "details": response.text
-            }), response.status_code
+            return jsonify({"error": f"Server vrátil {response.status_code}."}), response.status_code
 
     except Exception as e:
         return jsonify({"error": f"Spojení selhalo: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    # Používáme port 5000 nebo ten, který přidělí server
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
