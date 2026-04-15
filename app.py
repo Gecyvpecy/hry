@@ -1,29 +1,28 @@
 import os
-import datetime
+import sqlite3
 import random
 import requests
-import urllib3
 from flask import Flask, request, jsonify, render_template
-
-# --- 1. ZÁKLADNÍ NASTAVENÍ ---
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET", "tajny-klic-123")
 
-# --- 2. VOLITELNÝ REDIS (S POJISTKOU) ---
-# Pokusíme se importovat redis. Pokud v systému není, aplikace nespadne.
-try:
-    import redis
-    redis_host = os.environ.get("REDIS_HOST", "cache")
-    r = redis.Redis(host=redis_host, port=6379, decode_responses=True, socket_connect_timeout=1)
-    r.ping()
-    print("Redis pripojen!")
-except (ImportError, Exception):
-    r = None
-    print("Redis neni dostupny - jedeme v rezimu bez databaze.")
+# --- 1. DATABÁZE (SQLite v perzistentním úložišti) ---
+DB_PATH = "/data/quiz.db"
 
-# --- 3. DATA KVÍZU ---
+def init_db():
+    # Pokud složka neexistuje (pro lokální testování), vytvoříme ji
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS leaderboard 
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, score INTEGER)''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+# --- 2. DATA KVÍZU ---
 ALL_QUESTIONS = [
     {"id": 1, "q": "Kolik srdcí má chobotnice?", "opts": ["Jedno", "Dvě", "Tři", "Čtyři"], "ans": 2},
     {"id": 2, "q": "Který savec má nejhustší srst?", "opts": ["Lední medvěd", "Vydra mořská", "Činčila", "Bobr"], "ans": 1},
@@ -39,34 +38,39 @@ ALL_QUESTIONS = [
     {"id": 12, "q": "Které zvíře neumí skákat?", "opts": ["Slon", "Hroch", "Nosorožec", "Všechna uvedená"], "ans": 0}
 ]
 
-# --- 4. ROUTY ---
+# --- 3. ROUTY ---
 
 @app.route('/')
 def index():
-    try:
-        random_questions = random.sample(ALL_QUESTIONS, 10)
-        hall_of_fame = []
-        if r:
-            try:
-                data = r.zrevrange("leaderboard", 0, 9, withscores=True)
-                hall_of_fame = [{"name": name, "score": int(score)} for name, score in data]
-            except:
-                hall_of_fame = []
-        
-        return render_template('index.html', questions=random_questions, leaderboard=hall_of_fame)
-    except Exception as e:
-        return f"Chyba: {str(e)}", 500
+    random_questions = random.sample(ALL_QUESTIONS, 10)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    db_data = conn.execute("SELECT name, score FROM leaderboard ORDER BY score DESC LIMIT 10").fetchall()
+    conn.close()
+    
+    hall_of_fame = [dict(row) for row in db_data]
+    return render_template('index.html', questions=random_questions, leaderboard=hall_of_fame)
+
+@app.route('/leaderboard')
+def full_leaderboard():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    db_data = conn.execute("SELECT name, score FROM leaderboard ORDER BY score DESC LIMIT 50").fetchall()
+    conn.close()
+    
+    hall_of_fame = [dict(row) for row in db_data]
+    return render_template('leaderboard.html', leaderboard=hall_of_fame)
 
 @app.route('/submit', methods=['POST'])
 def submit_score():
-    if r:
-        try:
-            data = request.json or {}
-            user = data.get("user", "Anonym").strip() or "Anonym"
-            score = int(data.get("score", 0))
-            r.zadd("leaderboard", {user: score})
-        except:
-            pass
+    data = request.json or {}
+    user = data.get("user", "Anonym").strip() or "Anonym"
+    score = int(data.get("score", 0))
+    
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("INSERT INTO leaderboard (name, score) VALUES (?, ?)", (user, score))
+    conn.commit()
+    conn.close()
     return jsonify({"status": "success"})
 
 @app.route('/ai', methods=['POST'])
