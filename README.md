@@ -1,40 +1,22 @@
-\# Projekt: Kvízová nástěnka s AI
+#  AI Game Advisor
 
+Jednoduchá webová aplikace postavená na frameworku **Flask**, která využívá umělou inteligenci k doporučování videoher na základě uživatelem zadaného žánru.
 
+##  Funkce
+* **Doporučení na míru:** Uživatel zadá herní žánr (např. FPS, RPG, Roguelike) a AI vygeneruje konkrétní doporučení včetně stručného zdůvodnění.
+* **Moderní UI:** Temný gaming design s responzivním rozhraním.
+* **AI Integrace:** Komunikace s modelem `gemma3:27b` přes OpenAI kompatibilní API.
+* **Status Endpoint:** Možnost kontroly stavu aplikace a autora.
 
-\## Popis
+##  Technologie
+* **Backend:** Python 3.x, Flask
+* **Frontend:** HTML5, CSS3 (Flexbox), JavaScript (Fetch API)
+* **AI Komunikace:** Requests (s ošetřením SSL certifikátů)
+* **Deployment:** Připraveno pro Docker a školní testovací prostředí
 
-Aplikace slouží k evidenci výsledků kvízu a generování vtipných komentářů pomocí lokálního LLM.
+##  Instalace a spuštění
 
-
-
-\## Síťové nastavení
-
-\- \*\*IP adresa serveru:\*\* \[Doplňte svou IP, např. 10.10.10.1]
-
-\- \*\*Port aplikace:\*\* 8081 (TCP)
-
-\- \*\*Firewall:\*\* Povolen port 8081 (příkaz: `netsh advfirewall firewall add rule name="KvizAPI" dir=in action=allow protocol=TCP localport=8081`)
-
-
-
-\## Endpointy
-
-\- `GET /ping`: Ověření dostupnosti (vrací "pong")
-
-\- `GET /status`: Stav aplikace a autor v JSON
-
-\- `POST /ai`: Generování komentáře k výsledku (vyžaduje JSON `{"score": 10}`)
-
-
-
-\## Spuštění
-
-1\. Nainstalujte a spusťte \*\*Ollama\*\* s modelem `llama3.2:1b`.
-
-2\. V adresáři projektu spusťte:
-
-&#x20;  ```bash
-
-&#x20;  docker compose up --build
-
+1. **Klonování repozitáře:**
+   ```bash
+   git clone <url-tvého-repozitáře>
+   cd <slozka-projektu>
