@@ -3,196 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Game Advisor</title>
+    <title>Zvířecí Kvíz | Šárka Kašíková</title>
     <style>
-        :root {
-            --primary: #9d4edd;
-            --primary-hover: #7b2cbf;
-            --bg: #0f0c29;
-            --card-bg: #1b1b3a;
-            --text: #ffffff;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            color: var(--text);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
-
-        .container {
-            background-color: var(--card-bg);
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            width: 100%;
-            max-width: 450px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        h1 {
-            margin-bottom: 1.5rem;
-            color: var(--primary);
-            font-size: 2rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        p {
-            font-size: 0.9rem;
-            opacity: 0.8;
-            margin-bottom: 2rem;
-        }
-
-        .input-group {
-            margin-bottom: 1.5rem;
-        }
-
-        input {
-            width: 80%;
-            padding: 12px;
-            border-radius: 25px;
-            border: none;
-            background: #2d2d5a;
-            color: white;
-            outline: none;
-            text-align: center;
-            font-size: 1rem;
-            transition: 0.3s;
-        }
-
-        input:focus {
-            box-shadow: 0 0 10px var(--primary);
-        }
-
-        button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1rem;
-            transition: 0.3s;
-            text-transform: uppercase;
-        }
-
-        button:hover {
-            background-color: var(--primary-hover);
-            transform: translateY(-2px);
-        }
-
-        button:disabled {
-            background-color: #555;
-            cursor: not-allowed;
-        }
-
-        #result {
-            margin-top: 2rem;
-            padding: 15px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            min-height: 50px;
-            display: none;
-            line-height: 1.5;
-            border-left: 4px solid var(--primary);
-        }
-
-        .loader {
-            display: none;
-            margin: 20px auto;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--primary);
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; background-color: #eef2f3; color: #333; }
+        header { text-align: center; margin-bottom: 30px; padding: 20px; background: #2c3e50; color: white; border-radius: 10px; }
+        .leaderboard-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-top: 5px solid #f1c40f; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .leaderboard-table { width: 100%; border-collapse: collapse; }
+        .leaderboard-table td { padding: 10px; border-bottom: 1px solid #eee; }
+        .name-section { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        input[type="text"] { width: 100%; padding: 12px; margin-top: 10px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .question-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 5px solid #27ae60; }
+        .options label { display: block; margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-radius: 6px; cursor: pointer; border: 1px solid #ddd; }
+        .btn { display: block; width: 100%; background: #27ae60; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: bold; }
+        #result { margin-top: 30px; padding: 25px; border-radius: 12px; display: none; background: #fff; border: 2px solid #27ae60; text-align: center; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .ai-bubble { background: #fdf6e3; border: 2px solid #eee; border-radius: 15px; padding: 20px; position: relative; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Game Advisor</h1>
-    <p>Zadej svůj oblíbený žánr (např. FPS, RPG, Závodní) a AI ti vybere hru na míru!</p>
+    <header>
+        <h1>🐾 Velký zvířecí kvíz</h1>
+        <p>Vítej na stránce sarka-kasikova.kurim.ithope.eu!</p>
+    </header>
 
-    <div class="input-group">
-        <input type="text" id="genreInput" placeholder="Napiš žánr..." onkeypress="handleKeyPress(event)">
+    <div class="leaderboard-card">
+        <h3>🏆 Síň slávy (Top 10)</h3>
+        <table class="leaderboard-table">
+            {% if leaderboard %}
+                {% for player in leaderboard %}
+                <tr><td><strong>{{ player.name }}</strong></td><td>{{ player.score }}/10</td></tr>
+                {% endfor %}
+            {% else %}
+                <tr><td>Zatím žádné výsledky</td><td>—</td></tr>
+            {% endif %}
+        </table>
     </div>
 
-    <button id="sendBtn" onclick="getRecommendation()">Doporuč mi hru</button>
+    <div class="name-section">
+        <label for="username"><strong>Tvé jméno pro zápis do síně:</strong></label>
+        <input type="text" id="username" placeholder="Napiš svou přezdívku..." maxlength="20">
+    </div>
 
-    <div class="loader" id="loader"></div>
-    <div id="result"></div>
-</div>
+    <form id="quiz-form">
+        {% for question in questions %}
+        <div class="question-card" data-ans="{{ question.ans }}" data-id="{{ question.id }}">
+            <h3>{{ loop.index }}. {{ question.q }}</h3>
+            <div class="options">
+                {% for opt in question.opts %}
+                <label><input type="radio" name="q{{ question.id }}" value="{{ loop.index0 }}" required> {{ opt }}</label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn">🚀 Vyhodnotit a uložit výsledek</button>
+    </form>
 
-<script>
-    function handleKeyPress(event) {
-        if (event.key === "Enter") {
-            getRecommendation();
-        }
-    }
+    <div id="result">
+        <h2 id="score-text"></h2>
+        <div class="ai-bubble">
+            <div style="font-size: 2.5em; margin-bottom: 10px;">👨‍🔬</div>
+            <div style="font-weight: bold; color: #27ae60;">AI Zoolog říká:</div>
+            <div id="ai-comment">💬 Přemýšlím...</div>
+        </div>
+        <button onclick="location.reload()" class="btn" style="margin-top: 30px; background: #34495e;">Hrát znovu</button>
+    </div>
 
-    async function getRecommendation() {
-        const input = document.getElementById('genreInput');
-        const resultDiv = document.getElementById('result');
-        const loader = document.getElementById('loader');
-        const btn = document.getElementById('sendBtn');
-        
-        const genre = input.value.trim();
-        
-        if (!genre) {
-            alert("Prosím, zadej nějaký žánr!");
-            return;
-        }
-
-        // UI stav - načítání
-        resultDiv.style.display = 'none';
-        loader.style.display = 'block';
-        btn.disabled = true;
-
-        try {
-            const response = await fetch('/recommend', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ genre: genre })
+    <script>
+        document.getElementById('quiz-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim() || "Anonym";
+            let score = 0;
+            const cards = document.querySelectorAll('.question-card');
+            
+            cards.forEach(card => {
+                if (card.querySelector('input:checked')?.value === card.getAttribute('data-ans')) score++;
             });
 
-            const data = await response.json();
+            document.getElementById('quiz-form').style.display = 'none';
+            document.querySelector('.name-section').style.display = 'none';
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('score-text').innerText = `Skóre: ${score} z 10`;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            loader.style.display = 'none';
-            resultDiv.style.display = 'block';
-            btn.disabled = false;
+            // Uložit do databáze
+            await fetch('/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user: username, score: score })
+            });
 
-            if (data.recommendation) {
-                resultDiv.innerHTML = `<strong>AI doporučuje:</strong><br>${data.recommendation}`;
-                resultDiv.style.borderLeftColor = "#9d4edd";
-            } else {
-                resultDiv.innerText = "Chyba: " + (data.error || "Nepodařilo se získat odpověď.");
-                resultDiv.style.borderLeftColor = "red";
+            // Získat AI komentář
+            try {
+                const aiRes = await fetch('/ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ score: score, user: username })
+                });
+                const aiData = await aiRes.json();
+                document.getElementById('ai-comment').innerText = aiData.ai_comment;
+            } catch (err) {
+                document.getElementById('ai-comment').innerText = "AI zoolog se zakoukal na žirafy.";
             }
-        } catch (error) {
-            loader.style.display = 'none';
-            resultDiv.style.display = 'block';
-            btn.disabled = false;
-            resultDiv.innerText = "Chyba při spojení se serverem.";
-            resultDiv.style.borderLeftColor = "red";
-        }
-    }
-</script>
-
+        };
+    </script>
 </body>
 </html>
