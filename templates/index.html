@@ -3,46 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zvířecí Kvíz | Šárka Kašíková</title>
+    <title>Zvířecí Kvíz</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; background-color: #eef2f3; color: #333; }
+        body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #eef2f3; color: #333; position: relative; }
         header { text-align: center; margin-bottom: 30px; padding: 20px; background: #2c3e50; color: white; border-radius: 10px; }
+        .top-link { position: absolute; top: 10px; right: 10px; background: #f1c40f; color: #2c3e50; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 0.8em; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .leaderboard-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-top: 5px solid #f1c40f; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .leaderboard-table { width: 100%; border-collapse: collapse; }
-        .leaderboard-table td { padding: 10px; border-bottom: 1px solid #eee; }
+        .leaderboard-table td { padding: 8px; border-bottom: 1px solid #eee; }
         .name-section { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         input[type="text"] { width: 100%; padding: 12px; margin-top: 10px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         .question-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-left: 5px solid #27ae60; }
         .options label { display: block; margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-radius: 6px; cursor: pointer; border: 1px solid #ddd; }
         .btn { display: block; width: 100%; background: #27ae60; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: bold; }
-        #result { margin-top: 30px; padding: 25px; border-radius: 12px; display: none; background: #fff; border: 2px solid #27ae60; text-align: center; animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .ai-bubble { background: #fdf6e3; border: 2px solid #eee; border-radius: 15px; padding: 20px; position: relative; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        #result { margin-top: 30px; padding: 25px; border-radius: 12px; display: none; background: #fff; border: 2px solid #27ae60; text-align: center; }
+        .ai-bubble { background: #fdf6e3; border: 2px solid #eee; border-radius: 15px; padding: 20px; margin-top: 20px; }
     </style>
 </head>
 <body>
 
+    <a href="/leaderboard" class="top-link">🏆 Nejlepší z nejlepších</a>
+
     <header>
         <h1>🐾 Velký zvířecí kvíz</h1>
-        <p>Vítej na stránce sarka-kasikova.kurim.ithope.eu!</p>
+        <p>Ukaž, co víš o přírodě!</p>
     </header>
 
     <div class="leaderboard-card">
-        <h3>🏆 Síň slávy (Top 10)</h3>
+        <h3>🏆 Průběžné pořadí</h3>
         <table class="leaderboard-table">
-            {% if leaderboard %}
-                {% for player in leaderboard %}
-                <tr><td><strong>{{ player.name }}</strong></td><td>{{ player.score }}/10</td></tr>
-                {% endfor %}
+            {% for player in leaderboard %}
+            <tr><td><strong>{{ player.name }}</strong></td><td style="text-align:right">{{ player.score }}/10</td></tr>
             {% else %}
-                <tr><td>Zatím žádné výsledky</td><td>—</td></tr>
-            {% endif %}
+            <tr><td>Zatím nikdo nesoutěžil</td><td>—</td></tr>
+            {% endfor %}
         </table>
     </div>
 
     <div class="name-section">
-        <label for="username"><strong>Tvé jméno pro zápis do síně:</strong></label>
-        <input type="text" id="username" placeholder="Napiš svou přezdívku..." maxlength="20">
+        <label for="username"><strong>Tvé jméno pro zápis:</strong></label>
+        <input type="text" id="username" placeholder="Přezdívka..." maxlength="20">
     </div>
 
     <form id="quiz-form">
@@ -56,13 +56,13 @@
             </div>
         </div>
         {% endfor %}
-        <button type="submit" class="btn">🚀 Vyhodnotit a uložit výsledek</button>
+        <button type="submit" class="btn">🚀 Vyhodnotit a uložit</button>
     </form>
 
     <div id="result">
         <h2 id="score-text"></h2>
         <div class="ai-bubble">
-            <div style="font-size: 2.5em; margin-bottom: 10px;">👨‍🔬</div>
+            <div style="font-size: 2em;">👨‍🔬</div>
             <div style="font-weight: bold; color: #27ae60;">AI Zoolog říká:</div>
             <div id="ai-comment">💬 Přemýšlím...</div>
         </div>
@@ -77,23 +77,23 @@
             const cards = document.querySelectorAll('.question-card');
             
             cards.forEach(card => {
-                if (card.querySelector('input:checked')?.value === card.getAttribute('data-ans')) score++;
+                const selected = card.querySelector('input:checked');
+                if (selected && selected.value === card.getAttribute('data-ans')) score++;
             });
 
             document.getElementById('quiz-form').style.display = 'none';
             document.querySelector('.name-section').style.display = 'none';
+            document.querySelector('.leaderboard-card').style.display = 'none';
             document.getElementById('result').style.display = 'block';
-            document.getElementById('score-text').innerText = `Skóre: ${score} z 10`;
+            document.getElementById('score-text').innerText = `Tvé skóre: ${score} z 10`;
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            // Uložit do databáze
             await fetch('/submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user: username, score: score })
             });
 
-            // Získat AI komentář
             try {
                 const aiRes = await fetch('/ai', {
                     method: 'POST',
@@ -103,7 +103,7 @@
                 const aiData = await aiRes.json();
                 document.getElementById('ai-comment').innerText = aiData.ai_comment;
             } catch (err) {
-                document.getElementById('ai-comment').innerText = "AI zoolog se zakoukal na žirafy.";
+                document.getElementById('ai-comment').innerText = "Zoolog se někde zapomněl.";
             }
         };
     </script>
